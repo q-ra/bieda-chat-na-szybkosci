@@ -1,0 +1,55 @@
+<p>ID:
+  <%= user.id %>
+</p>
+<p>Username:
+  <%= user.username %>
+</p>
+
+<p id='name'>
+  <%= user.displayName %>
+</p>
+
+<button onclick="window.exportToJson()"> Export to json </button>
+<button onclick="window.exportToXml()"> Export to xml </button>
+
+
+<div id='chat'></div>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+<script>
+  document.onreadystatechange = function () {
+    if (document.readyState == 'complete') {
+      let socket = io.connect('http://127.0.0.1:3000')
+      socket.emit('setUsername', document.getElementById('name').innerHTML)
+      let username
+
+      socket.on('userSet', function (data) {
+        username = data.username
+        document.getElementById('chat').innerHTML = '<input type="text" id="message">\
+                <button type="button" name="button" onclick="window.sendMessage()">Send</button>\
+                <div id="message-container"></div>'
+      })
+      window.sendMessage = function () {
+        let msg = document.getElementById('message').value
+        if (msg) {
+          socket.emit('msg', { message: msg, username: username })
+        }
+      }
+
+      window.exportToJson = function () {
+        socket.emit('exportToJson', { })
+      }
+
+      window.exportToXml = function () {
+        socket.emit('exportToXml', { })
+      }
+
+      socket.on('newmsg', function (data) {
+        if (username) {
+          document.getElementById('message-container').innerHTML += '<div><b>' + data.username + '</b>: ' + data.message + '</div>'
+        }
+      })
+    }
+  }
+
+</script>
